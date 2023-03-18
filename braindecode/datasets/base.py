@@ -559,20 +559,21 @@ class BaseConcatDataset(ConcatDataset):
             self._save_kwargs(sub_dir, ds)
             # save_dir/{i_ds+offset}/target_name.json
             self._save_target_name(sub_dir, ds)
-        if overwrite:
-            # the following will be True for all datasets preprocessed and
-            # stored in parallel with braindecode.preprocessing.preprocess
-            if i_ds+1+offset < n_sub_dirs:
-                warnings.warn(f"The number of saved datasets ({i_ds+1+offset}) "
-                              f"does not match the number of existing "
-                              f"subdirectories ({n_sub_dirs}). You may now "
-                              f"encounter a mix of differently preprocessed "
-                              f"datasets!", UserWarning)
-        # if path contains files or directories that were not touched, raise
-        # warning
-        if path_contents:
-            warnings.warn(f'Chosen directory {path} contains other '
-                          f'subdirectories or files {path_contents}.')
+        # XXX: Commenting out warnings
+        # if overwrite:
+        #     # the following will be True for all datasets preprocessed and
+        #     # stored in parallel with braindecode.preprocessing.preprocess
+        #     if i_ds+1+offset < n_sub_dirs:
+        #         warnings.warn(f"The number of saved datasets ({i_ds+1+offset}) "
+        #                       f"does not match the number of existing "
+        #                       f"subdirectories ({n_sub_dirs}). You may now "
+        #                       f"encounter a mix of differently preprocessed "
+        #                       f"datasets!", UserWarning)
+        # # if path contains files or directories that were not touched, raise
+        # # warning
+        # if path_contents:
+        #     warnings.warn(f'Chosen directory {path} contains other '
+        #                   f'subdirectories or files {path_contents}.')
 
     @staticmethod
     def _save_signals(sub_dir, ds, i_ds, offset):

@@ -20,6 +20,7 @@ import numpy as np
 import mne
 import pandas as pd
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from ..datasets.base import WindowsDataset, BaseConcatDataset
 
@@ -119,13 +120,14 @@ def create_windows_from_events(
     mapping = dict() if infer_mapping else mapping
     infer_window_size_stride = window_size_samples is None
 
+    print("Creating windows from events")
     list_of_windows_ds = Parallel(n_jobs=n_jobs)(
         delayed(_create_windows_from_events)(
             ds, infer_mapping, infer_window_size_stride,
             trial_start_offset_samples, trial_stop_offset_samples,
             window_size_samples, window_stride_samples, drop_last_window,
             mapping, preload, drop_bad_windows, picks, reject, flat,
-            on_missing, accepted_bads_ratio, verbose) for ds in concat_ds.datasets)
+            on_missing, accepted_bads_ratio, verbose) for ds in tqdm(concat_ds.datasets))
     return BaseConcatDataset(list_of_windows_ds)
 
 
@@ -199,12 +201,13 @@ def create_fixed_length_windows(
         raise ValueError(f'Window size {window_size_samples} exceeds trial '
                          f'duration {lengths.min()}.')
 
+    print("Creating fixed length windows from concat dataset")
     list_of_windows_ds = Parallel(n_jobs=n_jobs)(
         delayed(_create_fixed_length_windows)(
             ds, start_offset_samples, stop_offset_samples, window_size_samples,
             window_stride_samples, drop_last_window, mapping, preload,
             drop_bad_windows, picks, reject, flat, targets_from, last_target_only,
-            on_missing, verbose) for ds in concat_ds.datasets)
+            on_missing, verbose) for ds in tqdm(concat_ds.datasets, total=len(concat_ds.datasets)))
 
     return BaseConcatDataset(list_of_windows_ds)
 
