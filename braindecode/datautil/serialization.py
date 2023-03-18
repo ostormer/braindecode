@@ -14,6 +14,7 @@ from glob import glob
 import mne
 import pandas as pd
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from ..datasets.base import BaseDataset, BaseConcatDataset, WindowsDataset
 
@@ -174,9 +175,10 @@ def load_concat_dataset(path, preload, ids_to_load=None, target_name=None,
             'Parallelized reading with `preload=False` is not supported for '
             'windowed data. Will use `n_jobs=1`.', UserWarning)
         n_jobs = 1
+    print(f"Loading concat dataset from {path}, preload={preload}")
     datasets = Parallel(n_jobs)(
         delayed(_load_parallel)(path, i, preload, is_raw)
-        for i in ids_to_load)
+        for i in tqdm(ids_to_load))
     return BaseConcatDataset(datasets)
 
 

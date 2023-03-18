@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 import mne
 from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from .base import BaseDataset, BaseConcatDataset
 
@@ -71,10 +72,11 @@ class TUH(BaseConcatDataset):
                 descriptions[i], target_name, preload, add_physician_reports)
                 for i in descriptions.columns]
         else:
+            print(f"Loading dataset from {path}:")
             base_datasets = Parallel(n_jobs)(delayed(
                 self._create_dataset)(
                 descriptions[i], target_name, preload, add_physician_reports
-            ) for i in descriptions.columns)
+            ) for i in tqdm(descriptions.columns))
         super().__init__(base_datasets)
 
     @staticmethod
