@@ -86,7 +86,7 @@ class TUH(BaseConcatDataset):
 
         # parse age and gender information from EDF header
         age, gender = _parse_age_and_gender_from_edf_header(file_path)
-        raw = mne.io.read_raw_edf(file_path, preload=preload)
+        raw = mne.io.read_raw_edf(file_path, preload=preload, verbose='ERROR')
 
         meas_date = datetime(1, 1, 1, tzinfo=timezone.utc) \
             if raw.info['meas_date'] is None else raw.info['meas_date']
