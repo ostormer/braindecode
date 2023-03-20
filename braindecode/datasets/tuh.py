@@ -186,7 +186,15 @@ def _parse_description_from_file_path(file_path):
         subject_id = tokens[-1].split('_')[0]
         session = tokens[-1].split('_')[1]
         segment = tokens[-1].split('_')[2].split('.')[0]
-        description = _read_date(file_path)
+        if not abnormal:
+            year, month, day = tokens[-3].split('_')[1:]
+            description = {
+                'year': int(year),
+                'month': int(month),
+                'day': int(day),
+            }
+        else:
+            description = _read_date(file_path)
         description.update({
             'path': file_path,
             'version': version,
@@ -194,11 +202,6 @@ def _parse_description_from_file_path(file_path):
             'session': int(session[1:]),
             'segment': int(segment[1:]),
         })
-        if not abnormal:
-            year, month, day = tokens[-3].split('_')[1:]
-            description['year'] = int(year)
-            description['month'] = int(month)
-            description['day'] = int(day)
         return description
     else:  # Old file path structure
         # expect file paths as tuh_eeg/version/file_type/reference/data_split/
