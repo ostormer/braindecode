@@ -315,7 +315,7 @@ fig.tight_layout()
 #    avoid this, either use Option 3 or adjust the split ratio.
 #
 # To split the ``train_set`` we will make use of the
-# ``train_split`` argument of ``EEGClassifier``. If you leave this empty
+# ``TRAIN_SPLIT`` argument of ``EEGClassifier``. If you leave this empty
 # (not None!), skorch will make an 80-20 train-validation split.
 # If you want to control the split manually you can do that by using
 # ``Subset`` from torch and ``predefined_split`` from skorch.
@@ -452,7 +452,7 @@ fig.tight_layout()
 # sklearn.model_selection.cross_val_score.html>`__ and the `KFold
 # <https://scikit-learn.org/stable/modules/generated/sklearn.model_
 # selection.KFold.html>`__. CV splitter.
-# The ``train_split`` argument has to be set to ``None``, as sklearn
+# The ``TRAIN_SPLIT`` argument has to be set to ``None``, as sklearn
 # will take care of the splitting.
 #
 
