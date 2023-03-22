@@ -663,6 +663,6 @@ def test_set_params(augmented_mock_clf, augmentation, kwargs, random_batch):
         train_split=predefined_split(random_batch)
     )
     assert isinstance(
-        augmented_mock_clf.train_split,
+        augmented_mock_clf.TRAIN_SPLIT,
         type(predefined_split(random_batch))
     )
