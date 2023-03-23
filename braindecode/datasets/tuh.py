@@ -328,7 +328,6 @@ class TUHAbnormal(TUH):
         assert ('train' in tokens or 'eval' in tokens), (
             'No train or eval set information found.')
         return {
-            'version': tokens[-9],
             'train': 'train' in tokens,
             'pathological': 'abnormal' in tokens,
         }
