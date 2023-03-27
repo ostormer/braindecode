@@ -201,7 +201,6 @@ def create_fixed_length_windows(
         raise ValueError(f'Window size {window_size_samples} exceeds trial '
                          f'duration {lengths.min()}.')
 
-    print("Creating fixed length windows from concat dataset")
     list_of_windows_ds = Parallel(n_jobs=n_jobs)(
         delayed(_create_fixed_length_windows)(
             ds, start_offset_samples, stop_offset_samples, window_size_samples,
