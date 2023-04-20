@@ -17,11 +17,11 @@
 import warnings
 
 import numpy as np
-import mne
 import pandas as pd
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+import mne
 from ..datasets.base import WindowsDataset, BaseConcatDataset
 
 
@@ -136,7 +136,9 @@ def create_fixed_length_windows(
         window_size_samples=None, window_stride_samples=None, drop_last_window=None,
         mapping=None, preload=False, drop_bad_windows=True, picks=None,
         reject=None, flat=None, targets_from='metadata', last_target_only=True,
-        on_missing='error', n_jobs=1, verbose='error'):
+        on_missing='error', n_jobs=1, verbose='error',
+        window_size_seconds=None
+):
     """Windower that creates sliding windows.
 
     Parameters
@@ -191,13 +193,13 @@ def create_fixed_length_windows(
     """
     stop_offset_samples, drop_last_window = _check_and_set_fixed_length_window_arguments(
         start_offset_samples, stop_offset_samples, window_size_samples, window_stride_samples,
-        drop_last_window)
+        drop_last_window, window_size_seconds)
 
     # check if recordings are of different lengths
     lengths = np.array([ds.raw.n_times for ds in concat_ds.datasets])
     if (np.diff(lengths) != 0).any() and window_size_samples is None:
         warnings.warn('Recordings have different lengths, they will not be batch-able!')
-    if any(window_size_samples > lengths):
+    if window_size_seconds is None and any(window_size_samples > lengths):
         raise ValueError(f'Window size {window_size_samples} exceeds trial '
                          f'duration {lengths.min()}.')
 
@@ -206,7 +208,7 @@ def create_fixed_length_windows(
             ds, start_offset_samples, stop_offset_samples, window_size_samples,
             window_stride_samples, drop_last_window, mapping, preload,
             drop_bad_windows, picks, reject, flat, targets_from, last_target_only,
-            on_missing, verbose) for ds in tqdm(concat_ds.datasets, total=len(concat_ds.datasets)))
+            on_missing, verbose, window_size_seconds) for ds in tqdm(concat_ds.datasets, total=len(concat_ds.datasets)))
 
     return BaseConcatDataset(list_of_windows_ds)
 
@@ -256,7 +258,7 @@ def _create_windows_from_events(
     # Onsets are relative to the beginning of the recording
     filtered_durations = np.array(
         [a['duration'] for a in ds.raw.annotations
-            if a['description'] in events_id]
+         if a['description'] in events_id]
     )
     stops = onsets + (filtered_durations * ds.raw.info['sfreq']).astype(int)
     # XXX This could probably be simplified by using chunk_duration in
@@ -274,10 +276,10 @@ def _create_windows_from_events(
         # window size is trial size
         if window_size_samples is None:
             window_size_samples = stops[0] + trial_stop_offset_samples - (
-                onsets[0] + trial_start_offset_samples)
+                    onsets[0] + trial_start_offset_samples)
             window_stride_samples = window_size_samples
         this_trial_sizes = (stops + trial_stop_offset_samples) - (
-            onsets + trial_start_offset_samples)
+                onsets + trial_start_offset_samples)
         # Maybe actually this is not necessary?
         # We could also just say we just assume window size=trial size
         # in case not given, without this condition...
@@ -332,7 +334,7 @@ def _create_fixed_length_windows(
         ds, start_offset_samples, stop_offset_samples, window_size_samples,
         window_stride_samples, drop_last_window, mapping=None, preload=False,
         drop_bad_windows=True, picks=None, reject=None, flat=None, targets_from='metadata',
-        last_target_only=True, on_missing='error', verbose='error'):
+        last_target_only=True, on_missing='error', verbose='error', window_size_seconds=None):
     """Create WindowsDataset from BaseDataset with sliding windows.
 
     Parameters
@@ -353,6 +355,10 @@ def _create_fixed_length_windows(
     ]
     stop = ds.raw.n_times \
         if stop_offset_samples is None else stop_offset_samples
+
+    # Edit: windows to set time:
+    if window_size_seconds is not None and window_size_samples is None:
+        window_size_samples = int(ds.raw.info["sfreq"] * window_size_seconds)
 
     # assume window should be whole recording
     if window_size_samples is None:
@@ -525,9 +531,9 @@ def _compute_window_inds(
 
     starts += start_offset
     stops += stop_offset
-    if any(size > (stops-starts)):
-        bads_mask = size > (stops-starts)
-        min_duration = (stops-starts).min()
+    if any(size > (stops - starts)):
+        bads_mask = size > (stops - starts)
+        min_duration = (stops - starts).min()
         if sum(bads_mask) <= accepted_bads_ratio * len(starts):
             starts = starts[np.logical_not(bads_mask)]
             stops = stops[np.logical_not(bads_mask)]
@@ -579,7 +585,7 @@ def _check_windowing_arguments(
         window_size_samples, window_stride_samples):
     assert isinstance(trial_start_offset_samples, (int, np.integer))
     assert (isinstance(trial_stop_offset_samples, (int, np.integer)) or
-           (trial_stop_offset_samples is None))
+            (trial_stop_offset_samples is None))
     assert isinstance(window_size_samples, (int, np.integer, type(None)))
     assert isinstance(window_stride_samples, (int, np.integer, type(None)))
     assert (window_size_samples is None) == (window_stride_samples is None)
@@ -592,7 +598,7 @@ def _check_windowing_arguments(
 
 def _check_and_set_fixed_length_window_arguments(start_offset_samples, stop_offset_samples,
                                                  window_size_samples, window_stride_samples,
-                                                 drop_last_window):
+                                                 drop_last_window, window_size_seconds):
     """Raises warnings for incorrect input arguments and will set correct default values for
     stop_offset_samples & drop_last_window, if necessary.
     """
@@ -613,18 +619,20 @@ def _check_and_set_fixed_length_window_arguments(start_offset_samples, stop_offs
                       ' instead.')
 
     if window_size_samples is not None and window_stride_samples is not None and \
-            drop_last_window is None:
+            drop_last_window is None and window_size_seconds is not None:
         raise ValueError('drop_last_window must be set if both window_size_samples &'
                          ' window_stride_samples have also been set')
-    elif window_size_samples is None and\
-            window_stride_samples is None and\
+    elif window_size_samples is None and \
+            window_size_seconds is None and \
+            window_stride_samples is None and \
             drop_last_window is False:
         # necessary for following assertion
         drop_last_window = None
 
     assert (window_size_samples is None) == \
            (window_stride_samples is None) == \
-           (drop_last_window is None)
+           (drop_last_window is None) \
+           or window_size_seconds is not None
 
     return stop_offset_samples, drop_last_window
 
