@@ -178,7 +178,7 @@ def load_concat_dataset(path, preload, ids_to_load=None, target_name=None,
     print(f"Loading concat dataset from {path}, preload={preload}")
     datasets = Parallel(n_jobs)(
         delayed(_load_parallel)(path, i, preload, is_raw)
-        for i in tqdm(ids_to_load))
+        for i in tqdm(ids_to_load, miniters=len(ids_to_load)/100, maxinterval=300))
     return BaseConcatDataset(datasets)
 
 
