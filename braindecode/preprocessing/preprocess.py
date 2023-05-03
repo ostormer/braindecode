@@ -1,6 +1,6 @@
 """Preprocessors that work on Raw or Epochs objects.
 """
-
+import gc
 # Authors: Hubert Banville <hubert.jbanville@gmail.com>
 #          Lukas Gemein <l.gemein@gmail.com>
 #          Simon Brandt <simonbrandt@protonmail.com>
@@ -131,9 +131,13 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
         for i, ds in tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets)))
 
     if save_dir is not None:  # Reload datasets and replace in concat_ds
-        concat_ds_reloaded = load_concat_dataset(
+        # concat_ds_reloaded = load_concat_dataset(
+        #     save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
+        # _replace_inplace(concat_ds, concat_ds_reloaded)
+        del concat_ds
+        gc.collect()
+        concat_ds = load_concat_dataset(
             save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
-        _replace_inplace(concat_ds, concat_ds_reloaded)
     else:
         if n_jobs is None or n_jobs == 1:  # joblib did not make copies, the
             # preprocessing happened in-place
