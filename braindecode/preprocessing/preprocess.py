@@ -129,7 +129,8 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
     list_of_ds = Parallel(n_jobs=n_jobs)(
         delayed(_preprocess)(ds, i, preprocessors, save_dir, overwrite)
         for i, ds in
-        tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 100))
+        tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 100,
+             maxinterval=300))
 
     if save_dir is not None:  # Reload datasets and replace in concat_ds
         # concat_ds_reloaded = load_concat_dataset(

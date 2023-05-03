@@ -77,7 +77,7 @@ class TUH(BaseConcatDataset):
             base_datasets = Parallel(n_jobs)(delayed(
                 self._create_dataset)(
                 descriptions[i], target_name, preload, add_physician_reports
-            ) for i in tqdm(descriptions.columns, miniters=len(descriptions.columns) / 100))
+            ) for i in tqdm(descriptions.columns, miniters=len(descriptions.columns) / 100, maxinterval=300))
         super().__init__(base_datasets)
 
     @staticmethod
