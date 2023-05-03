@@ -127,7 +127,8 @@ def create_windows_from_events(
             trial_start_offset_samples, trial_stop_offset_samples,
             window_size_samples, window_stride_samples, drop_last_window,
             mapping, preload, drop_bad_windows, picks, reject, flat,
-            on_missing, accepted_bads_ratio, verbose) for ds in tqdm(concat_ds.datasets))
+            on_missing, accepted_bads_ratio, verbose) for ds in
+        tqdm(concat_ds.datasets, miniters=len(concat_ds.datasets) / 100))
     return BaseConcatDataset(list_of_windows_ds)
 
 
@@ -208,7 +209,8 @@ def create_fixed_length_windows(
             ds, start_offset_samples, stop_offset_samples, window_size_samples,
             window_stride_samples, drop_last_window, mapping, preload,
             drop_bad_windows, picks, reject, flat, targets_from, last_target_only,
-            on_missing, verbose, window_size_seconds) for ds in tqdm(concat_ds.datasets, total=len(concat_ds.datasets)))
+            on_missing, verbose, window_size_seconds) for ds in
+        tqdm(concat_ds.datasets, total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 100))
 
     return BaseConcatDataset(list_of_windows_ds)
 

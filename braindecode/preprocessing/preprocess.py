@@ -1,6 +1,21 @@
 """Preprocessors that work on Raw or Epochs objects.
 """
 import gc
+from collections.abc import Iterable
+from functools import partial
+from warnings import warn
+
+import numpy as np
+import pandas as pd
+from joblib import Parallel, delayed
+from tqdm import tqdm
+
+from braindecode.datasets.base import BaseConcatDataset, BaseDataset, WindowsDataset
+from braindecode.datautil.serialization import (
+    load_concat_dataset, _check_save_dir_empty)
+from mne import create_info
+
+
 # Authors: Hubert Banville <hubert.jbanville@gmail.com>
 #          Lukas Gemein <l.gemein@gmail.com>
 #          Simon Brandt <simonbrandt@protonmail.com>
@@ -8,21 +23,6 @@ import gc
 #          Bruno Aristimunha <b.aristimunha@gmail.com>
 #
 # License: BSD (3-clause)
-
-from warnings import warn
-from functools import partial
-from collections.abc import Iterable
-
-import numpy as np
-import pandas as pd
-from mne import create_info
-from sklearn.utils import deprecated
-from joblib import Parallel, delayed
-from tqdm import tqdm
-
-from braindecode.datasets.base import BaseConcatDataset, BaseDataset, WindowsDataset
-from braindecode.datautil.serialization import (
-    load_concat_dataset, _check_save_dir_empty)
 
 
 class Preprocessor(object):
@@ -128,7 +128,8 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
     print("Applying preprocessors to dataset:")
     list_of_ds = Parallel(n_jobs=n_jobs)(
         delayed(_preprocess)(ds, i, preprocessors, save_dir, overwrite)
-        for i, ds in tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets)))
+        for i, ds in
+        tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 100))
 
     if save_dir is not None:  # Reload datasets and replace in concat_ds
         # concat_ds_reloaded = load_concat_dataset(
