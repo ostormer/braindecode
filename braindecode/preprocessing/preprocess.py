@@ -87,7 +87,7 @@ class Preprocessor(object):
 
 
 def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
-               n_jobs=None):
+               n_jobs=None, reload=True):
     """Apply preprocessors to a concat dataset.
 
     Parameters
@@ -107,6 +107,8 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
         will be raised.
     n_jobs : int | None
         Number of jobs for parallel execution.
+    reload : bool | True
+        Whether to (True) load dataset after preprocessing and return it, or (False) return nothing
 
     Returns
     -------
@@ -133,13 +135,16 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
              maxinterval=300))
 
     if save_dir is not None:  # Reload datasets and replace in concat_ds
-        concat_ds_reloaded = load_concat_dataset(
-            save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
-        _replace_inplace(concat_ds, concat_ds_reloaded)
-        # del concat_ds
-        # gc.collect()
-        # concat_ds = load_concat_dataset(
-        #     save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
+        if reload:
+            concat_ds_reloaded = load_concat_dataset(
+                save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
+            _replace_inplace(concat_ds, concat_ds_reloaded)
+            # del concat_ds
+            # gc.collect()
+            # concat_ds = load_concat_dataset(
+            #     save_dir, preload=False, target_name=None, ids_to_load=list(range(0, len(list_of_ds))))
+        else:
+            return
     else:
         if n_jobs is None or n_jobs == 1:  # joblib did not make copies, the
             # preprocessing happened in-place
