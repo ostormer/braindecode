@@ -1,6 +1,5 @@
 """Preprocessors that work on Raw or Epochs objects.
 """
-import gc
 from collections.abc import Iterable
 from functools import partial
 from warnings import warn
@@ -131,8 +130,8 @@ def preprocess(concat_ds, preprocessors, save_dir=None, overwrite=False,
     list_of_ds = Parallel(n_jobs=n_jobs)(
         delayed(_preprocess)(ds, i, preprocessors, save_dir, overwrite)
         for i, ds in
-        tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 100,
-             maxinterval=300))
+        tqdm(enumerate(concat_ds.datasets), total=len(concat_ds.datasets), miniters=len(concat_ds.datasets) / 10,
+             maxinterval=1200))
 
     if save_dir is not None:  # Reload datasets and replace in concat_ds
         if reload:
